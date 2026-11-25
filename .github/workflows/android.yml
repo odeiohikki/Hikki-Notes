@@ -100,8 +100,8 @@ jobs:
         working-directory: native/android
         run: |
           if [ -z "$HIKKI_KEYSTORE_BASE64" ]; then
-            echo "::warning::Permanent signing not configured; test APK only."
-            exit 0
+            echo "::error::Permanent signing not configured."
+            exit 1
           fi
           test -n "$HIKKI_KEYSTORE_PASSWORD"
           test -n "$HIKKI_KEY_ALIAS"
@@ -109,6 +109,7 @@ jobs:
           mkdir -p "$HOME/.android"
           printf '%s' "$HIKKI_KEYSTORE_BASE64" | base64 --decode > "$HOME/.android/hikki-release.jks"
           chmod 600 "$HOME/.android/hikki-release.jks"
+          keytool -list -keystore "$HOME/.android/hikki-release.jks" -storepass:env HIKKI_KEYSTORE_PASSWORD -alias "$HIKKI_KEY_ALIAS" > /dev/null
           cat >> app/build.gradle <<'GRADLE'
           android {
             signingConfigs {
