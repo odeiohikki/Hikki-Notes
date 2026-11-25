@@ -14,3 +14,6 @@ dialog{background:#211c30;border-color:#57486d;border-radius:24px;box-shadow:0 1
 main[data-tab="0"]>h1{padding-top:15px}main[data-tab="0"]>h1:before{content:'☾';position:absolute;right:28px;top:12px;font-size:72px;color:#e4cbff;text-shadow:0 0 28px #b99aef88;font-weight:400;pointer-events:none}main[data-tab="0"]>p{max-width:80%}
 .diary-hero{background:radial-gradient(ellipse at 100% 0%,#6b4d8c88,transparent 65%),linear-gradient(130deg,#382d4c,#231d34);border-color:#80669e;padding:20px;overflow:hidden}.diary-hero>strong{color:#d7c3f4}.diary-hero h2{font-size:23px;margin-top:14px}.diary-hero p{color:#d3c5e6}.study-hero{background:linear-gradient(125deg,#352b4b,#242137);border-color:#62517e}.empty-icon{color:#d5bafa;font-size:21px;margin-right:7px}
 @media(max-width:360px){main{padding-inline:12px}.card{padding:14px}nav button{font-size:9px}h1{font-size:32px}}@media(prefers-reduced-motion:reduce){button:active{transform:none}}
+
+/* R14: prevent horizontal overflow during tab slide */
+html,body{overflow-x:clip}
