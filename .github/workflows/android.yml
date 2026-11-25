@@ -4,6 +4,13 @@ on:
   push:
     paths:
       - 'native/**'
+      - 'app.js'
+      - 'style.css'
+      - 'index.html'
+      - 'sw.js'
+      - 'zip.js'
+      - 'manifest.json'
+      - 'icon-*.png'
       - '.github/workflows/android.yml'
 jobs:
   build:
@@ -25,6 +32,15 @@ jobs:
           cp ../index.html ../app.js ../style.css ../zip.js ../manifest.json ../sw.js ../icon-192.png ../icon-512.png www/
           npx cap add android
           npx cap sync android
+          node --check www/app.js
+          node --check www/sw.js
+          python - <<'PY'
+          from pathlib import Path
+          p = Path('android/app/src/main/AndroidManifest.xml')
+          s = p.read_text()
+          s = s.replace('</manifest>', '<uses-permission android:name="android.permission.SCHEDULE_EXACT_ALARM" />\n</manifest>')
+          p.write_text(s)
+          PY
       - name: Build debug APK
         working-directory: native/android
         run: bash gradlew assembleDebug
