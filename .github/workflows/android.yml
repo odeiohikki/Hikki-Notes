@@ -40,6 +40,42 @@ jobs:
           s = p.read_text()
           s = s.replace('</manifest>', '<uses-permission android:name="android.permission.SCHEDULE_EXACT_ALARM" />\n</manifest>')
           p.write_text(s)
+          # Keep the WebView inside system bars, including Android 15.
+          activity = Path('android/app/src/main/java/studio/hikki/notes/MainActivity.java')
+          activity.write_text("""package studio.hikki.notes;
+          import android.os.Bundle;
+          import android.view.View;
+          import androidx.core.view.ViewCompat;
+          import androidx.core.view.WindowInsetsCompat;
+          import androidx.core.graphics.Insets;
+          import androidx.core.view.WindowCompat;
+          import com.getcapacitor.BridgeActivity;
+          public class MainActivity extends BridgeActivity {
+            @Override public void onCreate(Bundle state) {
+              super.onCreate(state);
+              WindowCompat.setDecorFitsSystemWindows(getWindow(), false);
+              View root = findViewById(android.R.id.content);
+              ViewCompat.setOnApplyWindowInsetsListener(root, (v, insets) -> {
+                Insets bars = insets.getInsets(WindowInsetsCompat.Type.systemBars() | WindowInsetsCompat.Type.displayCutout());
+                Insets ime = insets.getInsets(WindowInsetsCompat.Type.ime());
+                v.setPadding(bars.left, bars.top, bars.right, Math.max(bars.bottom, ime.bottom));
+                return WindowInsetsCompat.CONSUMED;
+              });
+              getWindow().setStatusBarColor(0xff101e23);
+              getWindow().setNavigationBarColor(0xff101e23);
+              WindowCompat.getInsetsController(getWindow(), root).setAppearanceLightStatusBars(false);
+              WindowCompat.getInsetsController(getWindow(), root).setAppearanceLightNavigationBars(false);
+              ViewCompat.requestApplyInsets(root);
+            }
+          }
+          """)
+          # Use the existing Hikki Notes artwork for the launcher.
+          from shutil import copyfile
+          for folder in Path('android/app/src/main/res').glob('mipmap-*'):
+              for name in ('ic_launcher.png','ic_launcher_round.png','ic_launcher_foreground.png'):
+                  target = folder / name
+                  if target.exists():
+                      copyfile('../icon-192.png', target)
           PY
       - name: Build debug APK
         working-directory: native/android
