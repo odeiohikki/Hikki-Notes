@@ -66,3 +66,5 @@ main[data-tab='0']>.home-footer{display:flex;flex-direction:column;align-items:c
 html.privacy-cover body>*:not(dialog.hikki-message){visibility:hidden!important}html.privacy-cover dialog.hikki-message{visibility:visible!important}html.privacy-cover{background:var(--bg,#101e23)}
 
 .pin-area-row{display:flex;align-items:center;justify-content:space-between;padding:12px;border:1px solid var(--border);border-radius:14px;margin:8px 0}.pin-area-row input,input[type=checkbox]{accent-color:#9cd9ba}.pin-area-row input{width:22px;height:22px;margin:0}
+
+label:has(input[name="done"]){display:flex;align-items:center;justify-content:space-between;padding:12px;border:1px solid var(--border);border-radius:14px;margin:8px 0}label:has(input[name="done"]) input{width:22px;height:22px;margin:0}
