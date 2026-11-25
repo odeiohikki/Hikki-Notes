@@ -58,3 +58,5 @@ dialog.settings-screen{position:fixed;inset:0;margin:0 auto;width:min(100%,760px
 main[data-tab='0']>.home-footer{display:flex;flex-direction:column;align-items:center;gap:7px;text-align:center;width:100%;max-width:none;margin:28px 0 16px;padding:0;color:var(--muted);font-size:12px}.home-footer svg{width:23px;height:23px;color:var(--accent)}.home-footer small{font-size:9px;letter-spacing:1.5px;opacity:.8}
 
 .settings-screen>.dev-log{padding:14px;border:1px solid var(--border);border-radius:12px;white-space:pre-wrap}.settings-screen>button:not(.settings-close){margin-bottom:8px}
+
+.hikki-message{width:min(88%,380px);padding:24px;text-align:center;border-radius:22px;background:var(--card);color:var(--text);border:1px solid var(--border)}.hikki-message p{white-space:pre-wrap;color:var(--muted);line-height:1.5}.hikki-message button{width:100%;margin-top:12px}.storage-description{display:block;color:var(--muted);line-height:1.5;margin:4px 0 16px}.settings-inner input[hidden]{display:none!important}
