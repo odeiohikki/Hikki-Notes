@@ -53,6 +53,7 @@ jobs:
           import com.getcapacitor.BridgeActivity;
           public class MainActivity extends BridgeActivity {
             @Override public void onCreate(Bundle state) {
+              registerPlugin(BackupPlugin.class);
               super.onCreate(state);
               WindowCompat.setDecorFitsSystemWindows(getWindow(), false);
               View root = findViewById(android.R.id.content);
@@ -67,6 +68,41 @@ jobs:
               WindowCompat.getInsetsController(getWindow(), root).setAppearanceLightStatusBars(false);
               WindowCompat.getInsetsController(getWindow(), root).setAppearanceLightNavigationBars(false);
               ViewCompat.requestApplyInsets(root);
+            }
+          }
+          """)
+          activity.with_name('BackupPlugin.java').write_text("""package studio.hikki.notes;
+          import android.app.Activity;
+          import android.content.Intent;
+          import androidx.activity.result.ActivityResult;
+          import com.getcapacitor.Plugin;
+          import com.getcapacitor.PluginCall;
+          import com.getcapacitor.PluginMethod;
+          import com.getcapacitor.annotation.CapacitorPlugin;
+          import com.getcapacitor.annotation.ActivityCallback;
+          import java.io.OutputStream;
+          import android.util.Base64;
+          @CapacitorPlugin(name="HikkiBackup")
+          public class BackupPlugin extends Plugin {
+            @PluginMethod public void save(PluginCall call) {
+              Intent intent = new Intent(Intent.ACTION_CREATE_DOCUMENT);
+              intent.addCategory(Intent.CATEGORY_OPENABLE);
+              intent.setType("application/zip");
+              intent.putExtra(Intent.EXTRA_TITLE, call.getString("name", "hikki-backup.zip"));
+              startActivityForResult(call, intent, "saved");
+            }
+            @ActivityCallback private void saved(PluginCall call, ActivityResult result) {
+              if (call == null) return;
+              if (result.getResultCode() != Activity.RESULT_OK || result.getData() == null || result.getData().getData() == null) {
+                call.reject("Exportação cancelada");
+                return;
+              }
+              try (OutputStream out = getContext().getContentResolver().openOutputStream(result.getData().getData(), "w")) {
+                if (out == null) throw new java.io.IOException("Arquivo indisponível");
+                out.write(Base64.decode(call.getString("data"), Base64.DEFAULT));
+                out.flush();
+              } catch (Exception e) { call.reject("Não foi possível salvar o backup", e); return; }
+              call.resolve();
             }
           }
           """)
