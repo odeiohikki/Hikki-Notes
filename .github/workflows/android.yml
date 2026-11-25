@@ -28,6 +28,7 @@ jobs:
         working-directory: native
         run: |
           npm install
+          python -m pip install Pillow
           mkdir -p www
           cp ../index.html ../app.js ../style.css ../zip.js ../manifest.json ../sw.js ../icon-192.png ../icon-512.png www/
           npx cap add android
@@ -70,12 +71,25 @@ jobs:
           }
           """)
           # Use the existing Hikki Notes artwork for the launcher.
-          from shutil import copyfile
-          for folder in Path('android/app/src/main/res').glob('mipmap-*'):
+          from PIL import Image
+          source = Image.open('../icon-512.png').convert('RGBA')
+          res = Path('android/app/src/main/res')
+          for folder in res.glob('mipmap-*'):
               for name in ('ic_launcher.png','ic_launcher_round.png','ic_launcher_foreground.png'):
                   target = folder / name
                   if target.exists():
-                      copyfile('../icon-192.png', target)
+                      size = Image.open(target).size
+                      icon = source.resize(size, Image.Resampling.LANCZOS)
+                      if 'foreground' in name:
+                          icon = Image.new('RGBA', size)
+                          scaled = source.resize(tuple(round(n * .68) for n in size), Image.Resampling.LANCZOS)
+                          icon.paste(scaled, tuple((n-m)//2 for n,m in zip(size,scaled.size)))
+                      icon.save(target)
+          for target in res.glob('mipmap-anydpi*/ic_launcher*.xml'):
+              t = target.read_text()
+              import re
+              t = re.sub(r'android:drawable="@[^"]*ic_launcher_background"', 'android:drawable="@android:color/transparent"', t)
+              target.write_text(t)
           PY
       - name: Configure optional permanent signing
         env:
