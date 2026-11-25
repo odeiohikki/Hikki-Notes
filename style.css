@@ -26,3 +26,6 @@ html,body{overflow-x:clip}
 
 /* R17: labeled editor tools and compact mood picker */
 .editor-icon{flex-direction:column;gap:4px;min-width:52px;min-height:54px;font-size:23px;line-height:1.15}.tool-caption{font-size:10px;font-weight:500;line-height:1.2;text-align:center;max-width:85px}.editor-actions{justify-content:flex-start;gap:4px}.mood-toggle{display:flex;align-items:center;gap:8px;min-height:46px;width:100%;text-align:left;margin-bottom:10px;color:var(--accent)}.mood-picker{padding:8px;background:#171422;border:1px solid var(--border);border-radius:14px}
+
+/* R18 folder personalization and note toggles */
+.folder-preview{display:flex;align-items:center;gap:12px;padding:8px 0}.folder-preview svg{width:30px;height:30px;flex:none;color:var(--accent)}.folder-options,.note-toggles{display:flex;flex-wrap:wrap;gap:6px;margin:8px 0 14px}.folder-options button{width:44px;height:44px;padding:8px;display:grid;place-items:center;margin:0}.folder-options svg,.note-toggles svg{width:24px;height:24px}.folder-options .color-choice{border-radius:50%;color:transparent}.folder-options .color-choice.selected{color:#211e33;outline:2px solid var(--accent);outline-offset:2px}.folder-options button.selected:not(.color-choice),.note-toggles button.selected{background:#51436c;border-color:var(--accent)}.note-toggles button{flex:1}.folder-style p{margin-bottom:4px}
