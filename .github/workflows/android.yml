@@ -77,7 +77,44 @@ jobs:
                   if target.exists():
                       copyfile('../icon-192.png', target)
           PY
+      - name: Configure optional permanent signing
+        env:
+          HIKKI_KEYSTORE_BASE64: ${{ secrets.HIKKI_KEYSTORE_BASE64 }}
+          HIKKI_KEYSTORE_PASSWORD: ${{ secrets.HIKKI_KEYSTORE_PASSWORD }}
+          HIKKI_KEY_ALIAS: ${{ secrets.HIKKI_KEY_ALIAS }}
+          HIKKI_KEY_PASSWORD: ${{ secrets.HIKKI_KEY_PASSWORD }}
+        working-directory: native/android
+        run: |
+          if [ -z "$HIKKI_KEYSTORE_BASE64" ]; then
+            echo "::warning::Permanent signing not configured; test APK only."
+            exit 0
+          fi
+          test -n "$HIKKI_KEYSTORE_PASSWORD"
+          test -n "$HIKKI_KEY_ALIAS"
+          test -n "$HIKKI_KEY_PASSWORD"
+          mkdir -p "$HOME/.android"
+          printf '%s' "$HIKKI_KEYSTORE_BASE64" | base64 --decode > "$HOME/.android/hikki-release.jks"
+          chmod 600 "$HOME/.android/hikki-release.jks"
+          cat >> app/build.gradle <<'GRADLE'
+          android {
+            signingConfigs {
+              hikki {
+                storeFile file(System.getProperty("user.home") + "/.android/hikki-release.jks")
+                storePassword System.getenv("HIKKI_KEYSTORE_PASSWORD")
+                keyAlias System.getenv("HIKKI_KEY_ALIAS")
+                keyPassword System.getenv("HIKKI_KEY_PASSWORD")
+              }
+            }
+            buildTypes {
+              debug { signingConfig signingConfigs.hikki }
+            }
+          }
+          GRADLE
       - name: Build debug APK
+        env:
+          HIKKI_KEYSTORE_PASSWORD: ${{ secrets.HIKKI_KEYSTORE_PASSWORD }}
+          HIKKI_KEY_ALIAS: ${{ secrets.HIKKI_KEY_ALIAS }}
+          HIKKI_KEY_PASSWORD: ${{ secrets.HIKKI_KEY_PASSWORD }}
         working-directory: native/android
         run: bash gradlew assembleDebug
       - uses: actions/upload-artifact@v4
