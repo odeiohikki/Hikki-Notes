@@ -121,10 +121,11 @@ jobs:
                           scaled = source.resize(tuple(round(n * .68) for n in size), Image.Resampling.LANCZOS)
                           icon.paste(scaled, tuple((n-m)//2 for n,m in zip(size,scaled.size)))
                       icon.save(target)
+          (res / 'values' / 'hikki_icon.xml').write_text('<resources><color name="hikki_icon_background">#28563D</color></resources>')
           for target in res.glob('mipmap-anydpi*/ic_launcher*.xml'):
               t = target.read_text()
               import re
-              t = re.sub(r'android:drawable="@[^"]*ic_launcher_background"', 'android:drawable="@android:color/transparent"', t)
+              t = re.sub(r'android:drawable="@[^"]*ic_launcher_background"', 'android:drawable="@color/hikki_icon_background"', t)
               target.write_text(t)
           PY
       - name: Configure optional permanent signing
