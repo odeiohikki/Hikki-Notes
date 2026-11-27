@@ -84,22 +84,42 @@ jobs:
           import android.util.Base64;
           @CapacitorPlugin(name="HikkiBackup")
           public class BackupPlugin extends Plugin {
+            private java.io.File pending() { return new java.io.File(getContext().getCacheDir(), "pending-backup.zip"); }
+            @PluginMethod public void begin(PluginCall call) {
+              try (java.io.FileOutputStream out = new java.io.FileOutputStream(pending(), false)) { call.resolve(); }
+              catch (Exception e) { call.reject("Falha ao iniciar backup", e); }
+            }
+            @PluginMethod public void append(PluginCall call) {
+              try (java.io.FileOutputStream out = new java.io.FileOutputStream(pending(), true)) {
+                out.write(Base64.decode(call.getString("data"), Base64.DEFAULT));
+                call.resolve();
+              } catch (Exception e) { call.reject("Falha ao preparar backup", e); }
+            }
             @PluginMethod public void save(PluginCall call) {
-              try {
-                byte[] bytes = Base64.decode(call.getString("data"), Base64.DEFAULT);
-                if (bytes.length < 22 || bytes[0] != 80 || bytes[1] != 75) throw new java.io.IOException("ZIP vazio ou inválido");
-                java.io.File temp = new java.io.File(getContext().getCacheDir(), "pending-backup.zip");
-                try (java.io.FileOutputStream out = new java.io.FileOutputStream(temp)) { out.write(bytes); }
-              } catch (Exception e) { call.reject("Falha ao preparar ZIP", e); return; }
+              try (java.util.zip.ZipFile zip = new java.util.zip.ZipFile(pending())) {
+                java.util.zip.ZipEntry entry = zip.getEntry("backup.json");
+                if (entry == null || entry.getSize() < 1) throw new java.io.IOException("ZIP inválido");
+                java.util.zip.CRC32 crc = new java.util.zip.CRC32();
+                try (java.io.InputStream in = zip.getInputStream(entry)) {
+                  byte[] buffer = new byte[65536]; int n;
+                  while ((n = in.read(buffer)) != -1) crc.update(buffer, 0, n);
+                }
+                if (crc.getValue() != entry.getCrc()) throw new java.io.IOException("CRC inválido");
+              } catch (Exception e) { call.reject("Falha ao validar ZIP", e); return; }
               Intent intent = new Intent(Intent.ACTION_CREATE_DOCUMENT);
               intent.addCategory(Intent.CATEGORY_OPENABLE);
               intent.setType("application/zip");
               intent.putExtra(Intent.EXTRA_TITLE, call.getString("name", "hikki-backup.zip"));
               startActivityForResult(call, intent, "saved");
             }
+            private void cleanup(ActivityResult result) {
+              try { android.provider.DocumentsContract.deleteDocument(getContext().getContentResolver(), result.getData().getData()); } catch (Exception ignored) {}
+              pending().delete();
+            }
             @ActivityCallback private void saved(PluginCall call, ActivityResult result) {
               if (call == null) return;
               if (result.getResultCode() != Activity.RESULT_OK || result.getData() == null || result.getData().getData() == null) {
+                pending().delete();
                 call.reject("Exportação cancelada");
                 return;
               }
@@ -112,7 +132,7 @@ jobs:
                   while ((n = in.read(buffer)) != -1) out.write(buffer, 0, n);
                 }
                 out.flush();
-              } catch (Exception e) { call.reject("Não foi possível salvar o backup", e); return; }
+              } catch (Exception e) { cleanup(result); call.reject("Não foi possível salvar o backup", e); return; }
               try {
                 java.io.File temp = new java.io.File(getContext().getCacheDir(), "pending-backup.zip");
                 long count = 0;
@@ -126,7 +146,7 @@ jobs:
                 info.put("bytes", count);
                 temp.delete();
                 call.resolve(info);
-              } catch (Exception e) { call.reject("Backup não confirmado", e); }
+              } catch (Exception e) { cleanup(result); call.reject("Backup não confirmado", e); }
             }
           }
           """)
